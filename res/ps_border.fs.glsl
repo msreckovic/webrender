@@ -147,11 +147,26 @@ void draw_dashed_border(void) {
 // TODO: Investigate performance of this shader and see
 //       if it's worthwhile splitting it / removing branches etc.
 void main(void) {
-	if (vRadii.x > 0.0 &&
-		(distance(vRefPoint, vLocalPos) > vRadii.x ||
-		 distance(vRefPoint, vLocalPos) < vRadii.z)) {
-		discard;
-	}
+
+  if (vRadii.x > 0) {
+    if (vRadii.x != vRadii.y || vRadii.z != vRadii.w) {
+      vec2 uv = vec2(vLocalPos.x - vRefPoint.x, vLocalPos.y - vRefPoint.y);
+
+      float x2 = uv.x*uv.x;
+      float y2 = uv.y*uv.y;
+      vec4 vr = vRadii * vRadii;
+
+      vec2 p = x2/vr.xz + y2/vr.yw;
+
+      if (p.x > 1.0 || p.y < 1.0) {
+        discard;
+      }
+    
+    } else if (distance(vRefPoint, vLocalPos) > vRadii.x ||
+               distance(vRefPoint, vLocalPos) < vRadii.z) {
+      discard;
+    }
+  }
 
   switch (vBorderStyle) {
     case BORDER_STYLE_DASHED:
@@ -184,3 +199,4 @@ void main(void) {
     }
   }
 }
+
